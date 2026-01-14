@@ -1,0 +1,12 @@
+pandas
+numpy
+requests
+scikit-learn
+streamlit
+pydeck
+joblib
+polars
+pyarrow
+azure-storage-file-datalake
+azure-identity
+python-dotenv
