@@ -78,8 +78,15 @@ def run_etl():
     write_parquet_to_datalake(df_silver, "silver", "ridership_clean.parquet")
 
     # --- Step 2: Silver to Gold ---
+    # --- Step 2: Silver to Gold ---
     print(f"[{datetime.now()}] Creating Gold features...")
-    df_gold = df_silver.groupby(['station_complex', 'borough', 'latitude', 'longitude', 'hour', 'day_of_week'])['ridership'].mean().reset_index()
+    
+    # FIX: Sum ridership across different payment methods (OMNY, MetroCard) for the same hour first
+    # Group by [Station, Date, Hour] -> Sum(Ridership) = Total Crowd for that specific hour
+    df_hourly_total = df_silver.groupby(['station_complex', 'borough', 'latitude', 'longitude', 'date', 'hour', 'day_of_week'])['ridership'].sum().reset_index()
+    
+    # Now calculate the "Average Typical Ridership" for that hour (e.g., Average of all 8 AMs)
+    df_gold = df_hourly_total.groupby(['station_complex', 'borough', 'latitude', 'longitude', 'hour', 'day_of_week'])['ridership'].mean().reset_index()
     df_gold.rename(columns={'ridership': 'avg_ridership'}, inplace=True)
     
     print(f"[{datetime.now()}] Writing Gold data to Azure...")

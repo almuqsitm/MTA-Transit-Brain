@@ -49,11 +49,16 @@ def fetch_and_upload_data():
         print(f"[{datetime.now()}] Uploading to Azure ADLS (bronze/ridership_raw.csv)...")
         # Upload data
         chunk_size = 10 * 1024 * 1024 # 10MB
+        total_size = 0
+        max_size = 500 * 1024 * 1024 # 500MB limit for better accuracy
+        
         data = b""
         for chunk in response.iter_content(chunk_size=chunk_size):
             data += chunk
-            if len(data) > chunk_size:
-                break # Just getting a sample to be fast
+            total_size += len(chunk)
+            print(f"Downloaded {total_size / (1024*1024):.1f} MB...")
+            if total_size > max_size:
+                break
                 
         file_client.upload_data(data, overwrite=True)
         
